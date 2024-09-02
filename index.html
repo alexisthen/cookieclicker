@@ -7,16 +7,15 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background: linear-gradient(to bottom, rgb(0, 0, 255), black);
+            background: linear-gradient(to right, red, yellow);
+            animation: backgroundGlow 5s ease infinite;
             color: white;
             text-align: center;
-            animation: gradient 10s ease infinite;
         }
 
-        @keyframes gradient {
-            0% { background-color: rgb(0, 0, 255); }
-            33% { background-color: rgb(0, 255, 0); }
-            66% { background-color: rgb(255, 255, 0); }
+        @keyframes backgroundGlow {
+            0% { background-color: rgb(255, 0, 0); }
+            50% { background-color: rgb(255, 255, 0); }
             100% { background-color: rgb(255, 0, 0); }
         }
 
@@ -28,11 +27,20 @@
             border: none;
             color: white;
             font-size: 16px;
+            border-radius: 5px;
+            transition: box-shadow 0.4s;
         }
 
         #shopButton {
             background: linear-gradient(to right, red, yellow);
             color: black; /* Set text color for legibility */
+            box-shadow: 0 0 10px rgba(255, 255, 0, 0.5);
+            animation: glow 1.5s ease infinite;
+        }
+
+        .glowing {
+            box-shadow: 0 0 20px rgba(255, 255, 0, 1), 0 0 30px rgba(255, 255, 0, 0.5);
+            transition: box-shadow 0.4s;
         }
 
         #commandList {
@@ -70,17 +78,17 @@
 </div>
 
 <div>
-    <button id="adminButton" class="button" style="background: linear-gradient(to right, rgb(255, 0, 0), rgb(255, 70, 0), rgb(255, 255, 0), rgb(0, 255, 0), rgb(0, 255, 255), rgb(0, 0, 255), rgb(70, 0, 255), rgb(255, 0, 255));">Admin</button>
+    <button id="adminButton" class="button">Admin</button>
     <div id="commandList">
         <strong>Available Commands:</strong>
         <ul>
-            <li>/ban {github-name} {time} {reason}</li>
-            <li>/set-free {github-name}</li>
-            <li>/give-admin {github-name}</li>
-            <li>/revoke-admin {github-name}</li>
-            <li>/view-players</li>
-            <li>/stat-resetter</li>
-            <li>/stat {stat} {value}</li>
+            <li onclick="populateCommandInput('/ban {github-name} {time} {reason}')">/ban {github-name} {time} {reason}</li>
+            <li onclick="populateCommandInput('/set-free {github-name}')">/set-free {github-name}</li>
+            <li onclick="populateCommandInput('/give-admin {github-name}')">/give-admin {github-name}</li>
+            <li onclick="populateCommandInput('/revoke-admin {github-name}')">/revoke-admin {github-name}</li>
+            <li onclick="populateCommandInput('/view-players')">/view-players</li>
+            <li onclick="populateCommandInput('/stat-resetter')">/stat-resetter</li>
+            <li onclick="populateCommandInput('/stat {stat} {value}')">/stat {stat} {value}</li>
         </ul>
         <button id="closeCommandList" class="button">Close</button>
     </div>
@@ -154,10 +162,13 @@
     document.getElementById('adminButton').onclick = () => {
         const commandList = document.getElementById('commandList');
         commandList.style.display = commandList.style.display === 'none' ? 'block' : 'none';
+        document.getElementById('commandInput').style.display = commandList.style.display === 'none' ? 'none' : 'block';
     };
 
     document.getElementById('closeCommandList').onclick = () => {
-        document.getElementById('commandList').style.display = 'none';
+        const commandList = document.getElementById('commandList');
+        commandList.style.display = 'none';
+        document.getElementById('commandInput').style.display = 'none'; // Hide command input
     };
 
     document.getElementById('executeCommand').onclick = () => {
@@ -166,10 +177,15 @@
         document.getElementById('commandInput').value = ''; // Clear input box
     };
 
+    function populateCommandInput(command) {
+        document.getElementById('commandInput').value = command;
+    }
+
     function executeCommand(command, user) {
         const parts = command.split(' ');
         const cmd = parts[0];
 
+        // Verify if user executing the command is admin/owner
         if (!isAdmin(user)) {
             alert('You do not have permission to execute this command.');
             return;
