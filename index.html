@@ -4,114 +4,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shop Example</title>
+    <title>Cookie Clicker Game</title>
     <style>
         body {
-            margin: 0;
             font-family: Arial, sans-serif;
             background: linear-gradient(to bottom, blue, black);
             color: white;
             text-align: center;
         }
-        header {
-            padding: 20px;
-            background-color: rgba(0, 0, 0, 0.7);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-        .modal {
-            display: none; 
-            position: fixed; 
-            z-index: 1; 
-            left: 0;
-            top: 0;
-            width: 100%; 
-            height: 100%; 
-            overflow: auto; 
-            background-color: rgba(0,0,0,0.8);
-        }
-        .modal-content {
-            background-color: #fefefe;
-            margin: 15% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%; 
-            text-align: left;
-            color: black;
-        }
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
+        .button {
+            padding: 10px 20px;
+            margin: 5px;
             cursor: pointer;
+            background-color: rgba(0, 0, 0, 0.5);
+            border: none;
+            color: white;
+            font-size: 16px;
         }
-        .close:hover, .close:focus {
-            color: black;
+        #game {
+            margin-top: 20px;
         }
-        .item {
-            margin: 10px 0;
+        .upgrade {
+            display: flex;
+            justify-content: center;
+            margin: 10px;
         }
     </style>
 </head>
 <body>
 
-<header>
-    <h1>Welcome to Our Shop</h1>
-    <button id="shopButton">Open Shop</button>
-</header>
+<h1>Cookie Clicker</h1>
+<div id="cookieCount">Cookies: 0</div>
+<button id="cookieButton" class="button">Click Me!</button>
 
-<div id="shopModal" class="modal">
-    <div class="modal-content">
-        <span id="closeButton" class="close">&times;</span>
-        <h2>Shop Items</h2>
-        <div id="shopItems">
-            <div class="item">
-                <img src="https://via.placeholder.com/100" alt="Item 1" />
-                <span>Item 1 - $10</span>
-            </div>
-            <div class="item">
-                <img src="https://via.placeholder.com/100" alt="Item 2" />
-                <span>Item 2 - $15</span>
-            </div>
-            <div class="item">
-                <img src="https://via.placeholder.com/100" alt="Item 3" />
-                <span>Item 3 - $20</span>
-            </div>
-        </div>
-    </div>
+<div id="upgrades" class="upgrade">
+    <!-- Dynamic Upgrade Options Will Be Inserted Here -->
+</div>
+
+<div>
+    <input id="commandInput" type="text" placeholder="Enter command..." />
+    <button id="executeCommand" class="button">Execute</button>
 </div>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const shopButton = document.getElementById('shopButton');
-        const shopModal = document.getElementById('shopModal');
-        const closeButton = document.getElementById('closeButton');
+    let cookieCount = 0;
+    let upgrades = [
+        { name: 'Double Click', cost: 50, increase: 2 },
+        { name: 'Cookie Accelerators', cost: 100, increase: 5 },
+        { name: 'Mega Cookie Production', cost: 500, increase: 15 }
+    ];
+    let bannedUsers = new Set();
+    let admins = new Set();
+    
+    // Statistics
+    let stats = {
+        clicks: 0,
+    };
 
-        // Open the shop modal
-        shopButton.addEventListener('click', function () {
-            shopModal.style.display = 'block'; // Show modal
+    const owner = "alexisthen";
+
+    function updateCookieDisplay() {
+        document.getElementById('cookieCount').innerText = `Cookies: ${cookieCount}`;
+    }
+
+    function initializeUpgrades() {
+        const upgradesContainer = document.getElementById('upgrades');
+        upgrades.forEach((upgrade, index) => {
+            const button = document.createElement('button');
+            button.innerText = `${upgrade.name} - Cost: ${upgrade.cost}`;
+            button.className = 'button';
+            button.onclick = () => buyUpgrade(index);
+            upgradesContainer.appendChild(button);
         });
+    }
 
-        // Close the modal when clicking the close button
-        closeButton.addEventListener('click', function () {
-            shopModal.style.display = 'none'; // Hide modal
-        });
+    function buyUpgrade(index) {
+        const upgrade = upgrades[index];
+        if (cookieCount >= upgrade.cost) {
+            cookieCount -= upgrade.cost;
+            cookieButton.onclick = () => {
+                cookieCount += upgrade.increase; 
+                stats.clicks++; // Count the clicks
+                updateCookieDisplay();
+            };
+            updateCookieDisplay();
+            alert(`${upgrade.name} purchased!`);
+            // Remove upgrade from display
+            const buttons = document.querySelectorAll('.upgrade button');
+            buttons[index].style.display = 'none';
+        } else {
+            alert("Not enough cookies!");
+        }
+    }
 
-        // Close the modal when clicking outside of modal content
-        window.addEventListener('click', function (event) {
-            if (event.target === shopModal) {
-                shopModal.style.display = 'none'; // Hide modal
+    document.getElementById('cookieButton').onclick = () => {
+        cookieCount += 1;
+        stats.clicks++; // Count the clicks
+        updateCookieDisplay();
+    };
+
+    document.getElementById('executeCommand').onclick = () => {
+        const commandInput = document.getElementById('commandInput').value;
+        executeCommand(commandInput);
+        document.getElementById('commandInput').value = ''; // Clear input box
+    };
+
+    function executeCommand(command) {
+        const parts = command.split(' ');
+        const cmd = parts[0];
+
+        if (cmd === '/ban' && parts[1] && parts[2] && parts[3]) {
+            const user = parts[1];
+            const time = parts[2]; // Duration
+            const reason = parts.slice(3).join(' ');
+            bannedUsers.add(user);
+            alert(`${user} has been banned for ${time}. Reason: ${reason}`);
+        } else if (cmd === '/set-free' && parts[1]) {
+            const user = parts[1];
+            bannedUsers.delete(user);
+            alert(`${user} has been set free.`);
+        } else if (cmd === '/give-admin' && parts[1]) {
+            const user = parts[1];
+            if (user === owner) {
+                admins.add(user);
+                alert(`${user} has been given admin privileges.`);
             }
-        });
-    });
+        } else if (cmd === '/revoke-admin' && parts[1]) {
+            const user = parts[1];
+            if (user === owner) {
+                admins.delete(user);
+                alert(`${user} has had their admin privileges revoked.`);
+            }
+        } else if (cmd === '/view-players') {
+            alert(`Banned Users: ${Array.from(bannedUsers).join(', ')}`);
+        } else if (cmd === '/stat-resetter') {
+            // Reset stats
+            stats = { clicks: 0 };
+            alert('Stats have been reset.');
+        } else if (cmd === '/stat' && parts[1] && parts[2]) {
+            const stat = parts[1];
+            const value = parseInt(parts[2], 10);
+            if (stats.hasOwnProperty(stat)) {
+                stats[stat] = value;
+                alert(`${stat} has been set to ${value}.`);
+            } else {
+                alert('Invalid stat.');
+            }
+        } else {
+            alert('Invalid command or insufficient privileges!');
+        }
+    }
+
+    // Initialize the game on load
+    window.onload = () => {
+        updateCookieDisplay();
+        initializeUpgrades();
+    };
 </script>
 
 </body>
-</html/>
-### Instructions:
-- **Testing**: Once you've copied this code into an HTML file, open it in your Chrome browser on the Chromebook to test its functionality.
-- **Images**: If you have specific images to use for your shop items, replace the placeholder links with those URLs.
-
-This example should work properly on school computers and in Chrome, assuming no additional restrictions are in place. If you encounter any specific issues, please let me know!
+</html>
