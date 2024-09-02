@@ -125,7 +125,8 @@
 <div id="emailBox" style="position: absolute; top: 0; left: 0;">
     <button id="emailButton" class="button">📧</button>
     <div id="emailBoxContent">
-        <strong>GitHub Name:</strong> <span id="githubName">your_github_username</span>
+        <strong>GitHub Name:</strong> <span id="githubName"></span>
+        <p id="emailMessage"></p>
     </div>
 </div>
 
@@ -162,11 +163,14 @@
     let cart = {};
     let isBanned = false;
 
-    // Simulate user sign-in
+    // Get GitHub username automatically
     const githubUsername = prompt("Enter your GitHub username:");
     if (!githubUsername || githubUsername.trim() === "") {
         isBanned = true; // User is considered banned if no username is provided
     }
+
+    document.getElementById('githubName').innerText = githubUsername; // Display the GitHub username
+    document.getElementById('emailMessage').innerText = "Welcome to Cookie Clicker, " + githubUsername + "!";
 
     function updateCookieDisplay() {
         document.getElementById('cookieCount').innerText = `Cookies: ${cookieCount}`;
@@ -180,8 +184,6 @@
 
     document.getElementById('emailButton').onclick = () => {
         const emailBox = document.getElementById('emailBoxContent');
-        const emailMessage = document.getElementById('emailBoxContent');
-        document.getElementById('githubName').innerText = githubUsername; // Display the GitHub username
         emailBox.style.display = emailBox.style.display === 'none' ? 'block' : 'none';
     };
 
@@ -216,9 +218,28 @@
         document.getElementById('commandInput').value = command;
     }
 
+    function showAlert(message) {
+        alert(message);
+    }
+
     function executeCommand(command) {
         // Placeholder for command execution logic
-        document.getElementById('emailMessage').innerText = `Executed command: ${command}`;
+        if (command.startsWith("/view-players")) {
+            const players = ["User1", "User2", "Admin1", "BannedUser"]; // Example player list
+            const admins = ["Admin1", "Admin2"]; // Example admin list
+            const bannedUsers = ["BannedUser"]; // Example banned list
+            const playerList = `Players:\n${players.join('\n')}\n\nAdmins:\n${admins.join('\n')}\n\nBanned Users:\n${bannedUsers.join('\n')}`;
+            showAlert(playerList);
+            return;
+        }
+
+        // Example output for other commands execution
+        if (command.startsWith("/ban") || command.startsWith("/unban") || command.startsWith("/give-admin") || command.startsWith("/revoke-admin")) {
+            showAlert(`Command executed: ${command}`);
+            return;
+        }
+
+        showAlert(`Executed command: ${command}`);
     }
 
     function purchaseItem(itemName, itemCost) {
