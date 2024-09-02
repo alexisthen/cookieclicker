@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cookie Clicker Game</title>
+    <title>Cookie Clicker</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -106,7 +106,7 @@
 
 <div id="bannedOverlay">
     <h1>You are banned!</h1>
-    <p>You cannot earn cookies.</p>
+    <p id="banReason"></p>
 </div>
 
 <h1>Cookie Clicker</h1>
@@ -135,14 +135,8 @@
     <div id="commandList">
         <strong>Available Commands:</strong>
         <ul>
-            <li onclick="populateCommandInput('/ban {github-name} {time} {reason}')">/ban {github-name} {time} {reason}</li>
-            <li onclick="populateCommandInput('/set-free {github-name}')">/set-free {github-name}</li>
-            <li onclick="populateCommandInput('/unban {github-name}')">/unban {github-name}</li>
-            <li onclick="populateCommandInput('/give-admin {github-name}')">/give-admin {github-name}</li>
-            <li onclick="populateCommandInput('/revoke-admin {github-name}')">/revoke-admin {github-name}</li>
             <li onclick="populateCommandInput('/view-players')">/view-players</li>
-            <li onclick="populateCommandInput('/stat-resetter')">/stat-resetter</li>
-            <li onclick="populateCommandInput('/stat {stat} {value}')">/stat {stat} {value}</li>
+            <li onclick="populateCommandInput('/test-ban')">/test-ban</li>
         </ul>
         <button id="closeCommandList" class="button">Close</button>
     </div>
@@ -162,11 +156,14 @@
     let cookieCount = 0;
     let cart = {};
     let isBanned = false;
+    let isAdmin = false;
 
     // Get GitHub username automatically
     const githubUsername = prompt("Enter your GitHub username:");
     if (!githubUsername || githubUsername.trim() === "") {
         isBanned = true; // User is considered banned if no username is provided
+    } else if (githubUsername.toLowerCase() === "alexisthen") {
+        isAdmin = true; // Making Alexisthen an admin
     }
 
     document.getElementById('githubName').innerText = githubUsername; // Display the GitHub username
@@ -222,20 +219,40 @@
         alert(message);
     }
 
+    function banUser(reason) {
+        isBanned = true;
+        document.getElementById('banReason').innerText = reason;
+        document.getElementById('bannedOverlay').style.display = 'block';
+
+        // Set a timeout to unban the user after 1 minute
+        setTimeout(() => {
+            isBanned = false;
+            document.getElementById('bannedOverlay').style.display = 'none';
+            alert('You have been unbanned.');
+        }, 60000); // 1 minute = 60000 ms
+    }
+
     function executeCommand(command) {
-        // Placeholder for command execution logic
-        if (command.startsWith("/view-players")) {
-            const players = ["User1", "User2", "Admin1", "BannedUser"]; // Example player list
-            const admins = ["Admin1", "Admin2"]; // Example admin list
-            const bannedUsers = ["BannedUser"]; // Example banned list
-            const playerList = `Players:\n${players.join('\n')}\n\nAdmins:\n${admins.join('\n')}\n\nBanned Users:\n${bannedUsers.join('\n')}`;
-            showAlert(playerList);
+        if (command.startsWith("/test-ban")) {
+            if (!isBanned) {
+                banUser("CHEATING(test)");
+            } else {
+                showAlert("You are already banned.");
+            }
             return;
         }
 
-        // Example output for other commands execution
-        if (command.startsWith("/ban") || command.startsWith("/unban") || command.startsWith("/give-admin") || command.startsWith("/revoke-admin")) {
-            showAlert(`Command executed: ${command}`);
+        // Allow only admins to execute other commands
+        if (!isAdmin) {
+            return showAlert("You do not have permission to use this command.");
+        }
+
+        if (command.startsWith("/view-players")) {
+            const players = ["User1", "User2", "Alexisthen", "BannedUser"]; // Example player list
+            const admins = ["Alexisthen"]; // Example admin list
+            const bannedUsers = ["BannedUser"]; // Example banned list
+            const playerList = `Players:\n${players.join('\n')}\n\nAdmins:\n${admins.join('\n')}\n\nBanned Users:\n${bannedUsers.join('\n')}`;
+            showAlert(playerList);
             return;
         }
 
@@ -300,6 +317,7 @@
     };
 
     if (isBanned) {
+        document.getElementById('banReason').innerText = "No valid username provided."; // Show reason if banned
         document.getElementById('bannedOverlay').style.display = 'block'; // Show banned overlay
     }
 
