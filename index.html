@@ -7,10 +7,19 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background: linear-gradient(to bottom, blue, black);
+            background: linear-gradient(to bottom, rgb(0, 0, 255), black);
             color: white;
             text-align: center;
+            animation: gradient 10s ease infinite;
         }
+
+        @keyframes gradient {
+            0% { background-color: rgb(0, 0, 255); }
+            33% { background-color: rgb(0, 255, 0); }
+            66% { background-color: rgb(255, 255, 0); }
+            100% { background-color: rgb(255, 0, 0); }
+        }
+
         .button {
             padding: 10px 20px;
             margin: 5px;
@@ -20,9 +29,26 @@
             color: white;
             font-size: 16px;
         }
+
+        #shopButton {
+            background: linear-gradient(to right, red, yellow);
+            color: black; /* Set text color for legibility */
+        }
+
+        #commandList {
+            display: none;
+            background-color: rgba(0, 0, 255, 0.7);
+            color: rgb(255, 255, 255);
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px auto;
+            width: fit-content;
+        }
+
         #game {
             margin-top: 20px;
         }
+
         .upgrade {
             display: flex;
             justify-content: center;
@@ -36,11 +62,29 @@
 <div id="cookieCount">Cookies: 0</div>
 <button id="cookieButton" class="button">Click Me!</button>
 
+<!-- New Shop Button -->
+<button id="shopButton" class="button">Shop</button>
+
 <div id="upgrades" class="upgrade">
     <!-- Dynamic Upgrade Options Will Be Inserted Here -->
 </div>
 
 <div>
+    <button id="adminButton" class="button" style="background: linear-gradient(to right, rgb(255, 0, 0), rgb(255, 70, 0), rgb(255, 255, 0), rgb(0, 255, 0), rgb(0, 255, 255), rgb(0, 0, 255), rgb(70, 0, 255), rgb(255, 0, 255));">Admin</button>
+    <div id="commandList">
+        <strong>Available Commands:</strong>
+        <ul>
+            <li>/ban {github-name} {time} {reason}</li>
+            <li>/set-free {github-name}</li>
+            <li>/give-admin {github-name}</li>
+            <li>/revoke-admin {github-name}</li>
+            <li>/view-players</li>
+            <li>/stat-resetter</li>
+            <li>/stat {stat} {value}</li>
+        </ul>
+        <button id="closeCommandList" class="button">Close</button>
+    </div>
+    
     <input id="commandInput" type="text" placeholder="Enter command..." />
     <button id="executeCommand" class="button">Execute</button>
 </div>
@@ -104,6 +148,16 @@
         cookieCount += 1;
         stats.clicks++; // Count the clicks
         updateCookieDisplay();
+    };
+
+    // Toggle command list visibility
+    document.getElementById('adminButton').onclick = () => {
+        const commandList = document.getElementById('commandList');
+        commandList.style.display = commandList.style.display === 'none' ? 'block' : 'none';
+    };
+
+    document.getElementById('closeCommandList').onclick = () => {
+        document.getElementById('commandList').style.display = 'none';
     };
 
     document.getElementById('executeCommand').onclick = () => {
