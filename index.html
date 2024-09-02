@@ -29,7 +29,7 @@
             border-radius: 5px;
         }
 
-        #shopBox, #commandList, #emailBox {
+        #shopBox, #commandList, #emailBoxContent {
             display: none;
             background-color: rgba(0, 0, 255, 0.7);
             color: white;
@@ -39,8 +39,27 @@
             width: fit-content;
         }
 
-        input {
+        #cartBox {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: rgba(0, 0, 255, 0.7);
+            padding: 10px;
+        }
+
+        #cartItems {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        #cartItems li {
             padding: 5px;
+        }
+
+        #cartTotal {
+            font-size: 18px;
             margin-top: 10px;
         }
     </style>
@@ -48,14 +67,6 @@
 <body>
 
 <h1>Cookie Clicker</h1>
-<div id="emailBox" style="position: absolute; top: 0; left: 0;">
-    <button id="emailButton" style="background-color: transparent; border: none; cursor: pointer;">📧</button>
-    <div id="emailBoxContent" style="display: none; background-color: rgba(0, 0, 255, 0.7); padding: 15px; border-radius: 5px; width: fit-content;">
-        <strong>Github Name:</strong> <span id="githubName">your_github_username</span><br />
-        <p id="emailMessage">No new messages.</p>
-    </div>
-</div>
-
 <div id="cookieCount">Cookies: 0</div>
 <button id="cookieButton" class="button">Click Me!</button>
 
@@ -66,6 +77,14 @@
         <li onclick="purchaseItem('Double Click', 50)">Double Click - Cost: 50 Cookies</li>
     </ul>
     <button id="closeShopButton" class="button">Close Shop</button>
+</div>
+
+<div id="emailBox" style="position: absolute; top: 0; left: 0;">
+    <button id="emailButton" style="background-color: transparent; border: none; cursor: pointer;">📧</button>
+    <div id="emailBoxContent">
+        <strong>Github Name:</strong> <span id="githubName">your_github_username</span><br />
+        <p id="emailMessage">No new messages.</p>
+    </div>
 </div>
 
 <div>
@@ -89,8 +108,16 @@
     <button id="executeCommand" class="button">Execute</button>
 </div>
 
+<div id="cartBox">
+    <strong>Your Cart:</strong>
+    <ul id="cartItems"></ul>
+    <div id="cartTotal">Total: 0 Cookies</div>
+    <button id="checkoutButton" class="button">Checkout</button>
+</div>
+
 <script>
     let cookieCount = 0;
+    let cart = {};
 
     function updateCookieDisplay() {
         document.getElementById('cookieCount').innerText = `Cookies: ${cookieCount}`;
@@ -136,9 +163,64 @@
 
     function executeCommand(command) {
         // Your code here for command execution
-        // Example: Add a message to the email box when a command is executed
         document.getElementById('emailMessage').innerText = `Executed command: ${command}`;
     }
+
+    function purchaseItem(itemName, itemCost) {
+        if (cookieCount < itemCost) {
+            alert(`Not enough cookies to buy ${itemName}.`);
+            return;
+        }
+
+        cart[itemName] = (cart[itemName] || 0) + 1;
+        cookieCount -= itemCost;
+        updateCookieDisplay();
+        updateCartDisplay();
+    }
+
+    function updateCartDisplay() {
+        const cartItemsList = document.getElementById('cartItems');
+        cartItemsList.innerHTML = ''; // Clear existing items
+
+        for (const item in cart) {
+            const listItem = document.createElement('li');
+            const quantity = cart[item];
+            listItem.innerText = `${item} (x${quantity})`;
+            cartItemsList.appendChild(listItem);
+        }
+
+        const totalCookies = Object.keys(cart).reduce((total, item) => total + cart[item] * 50, 0); // Assuming each item costs 50 cookies
+        document.getElementById('cartTotal').innerText = `Total: ${totalCookies} Cookies`;
+
+        // Disable/Enable Checkout button
+        document.getElementById('checkoutButton').disabled = cookieCount < totalCookies;
+    }
+
+    document.getElementById('checkoutButton').onclick = () => {
+        const totalCookies = Object.keys(cart).reduce((total, item) => total + cart[item] * 50, 0);
+        
+        if (cookieCount >= totalCookies) {
+            cookieCount -= totalCookies;
+            cart = {}; // Clear cart after checkout
+            alert('Checkout successful!');
+        } else {
+            // Charge for what can be afforded
+            const affordableCart = {};
+            for (const item in cart) {
+                const itemCost = 50 * cart[item];
+                if (cookieCount > 0) {
+                    const canBuyCount = Math.min(cart[item], Math.floor(cookieCount / 50));
+                    affordableCart[item] = canBuyCount;
+                    cookieCount -= canBuyCount * 50;
+                }
+            }
+            cart = affordableCart;
+            alert('Checked out with insufficient funds; purchased available items only.');
+        }
+
+        updateCookieDisplay();
+        updateCartDisplay();
+    };
 
     window.onload = () => {
         updateCookieDisplay();
