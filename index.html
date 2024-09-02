@@ -8,7 +8,7 @@
         body {
             font-family: Arial, sans-serif;
             background: linear-gradient(to right, red, yellow);
-            animation: backgroundGlow 5s ease infinite;
+            animation: backgroundGlow 2s ease infinite;
             color: white;
             text-align: center;
         }
@@ -16,7 +16,7 @@
         @keyframes backgroundGlow {
             0% { background-color: rgb(255, 0, 0); }
             50% { background-color: rgb(255, 255, 0); }
-            100% { background-color: rgb(255, 0, 0); }
+            100% { background-color: rgb(0, 255, 0); }
         }
 
         .button {
@@ -29,18 +29,19 @@
             font-size: 16px;
             border-radius: 5px;
             transition: box-shadow 0.4s;
+            animation: glow 1s ease infinite;
         }
 
         #shopButton {
             background: linear-gradient(to right, red, yellow);
             color: black; /* Set text color for legibility */
             box-shadow: 0 0 10px rgba(255, 255, 0, 0.5);
-            animation: glow 1.5s ease infinite;
         }
 
-        .glowing {
-            box-shadow: 0 0 20px rgba(255, 255, 0, 1), 0 0 30px rgba(255, 255, 0, 0.5);
-            transition: box-shadow 0.4s;
+        @keyframes glow {
+            0% { box-shadow: 0 0 5px rgba(255, 0, 0, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(255, 255, 0, 1); }
+            100% { box-shadow: 0 0 5px rgba(255, 0, 0, 0.5); }
         }
 
         #commandList {
@@ -51,6 +52,28 @@
             border-radius: 5px;
             margin: 20px auto;
             width: fit-content;
+        }
+
+        #shopBox {
+            display: none;
+            background-color: rgba(0, 0, 255, 0.7);
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px auto;
+            width: fit-content;
+            position: relative;
+            z-index: 1000; /* Ensure it's above other elements */
+        }
+
+        #commandInput {
+            display: none;
+            margin-top: 10px;
+            padding: 5px;
+            width: 300px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
         }
 
         #game {
@@ -72,6 +95,15 @@
 
 <!-- New Shop Button -->
 <button id="shopButton" class="button">Shop</button>
+<div id="shopBox">
+    <strong>Available Items for Purchase:</strong>
+    <ul id="shopItems">
+        <li onclick="purchaseItem('Double Click', 50)">Double Click - Cost: 50 Cookies</li>
+        <li onclick="purchaseItem('Cookie Accelerators', 100)">Cookie Accelerators - Cost: 100 Cookies</li>
+        <li onclick="purchaseItem('Mega Cookie Production', 500)">Mega Cookie Production - Cost: 500 Cookies</li>
+    </ul>
+    <button id="closeShopButton" class="button">Close Shop</button>
+</div>
 
 <div id="upgrades" class="upgrade">
     <!-- Dynamic Upgrade Options Will Be Inserted Here -->
@@ -84,6 +116,7 @@
         <ul>
             <li onclick="populateCommandInput('/ban {github-name} {time} {reason}')">/ban {github-name} {time} {reason}</li>
             <li onclick="populateCommandInput('/set-free {github-name}')">/set-free {github-name}</li>
+            <li onclick="populateCommandInput('/unban {github-name}')">/unban {github-name}</li>
             <li onclick="populateCommandInput('/give-admin {github-name}')">/give-admin {github-name}</li>
             <li onclick="populateCommandInput('/revoke-admin {github-name}')">/revoke-admin {github-name}</li>
             <li onclick="populateCommandInput('/view-players')">/view-players</li>
@@ -99,11 +132,6 @@
 
 <script>
     let cookieCount = 0;
-    let upgrades = [
-        { name: 'Double Click', cost: 50, increase: 2 },
-        { name: 'Cookie Accelerators', cost: 100, increase: 5 },
-        { name: 'Mega Cookie Production', cost: 500, increase: 15 }
-    ];
     let bannedUsers = new Set();
     let admins = new Set();
     
@@ -122,47 +150,34 @@
         document.getElementById('cookieCount').innerText = `Cookies: ${cookieCount}`;
     }
 
-    function initializeUpgrades() {
-        const upgradesContainer = document.getElementById('upgrades');
-        upgrades.forEach((upgrade, index) => {
-            const button = document.createElement('button');
-            button.innerText = `${upgrade.name} - Cost: ${upgrade.cost}`;
-            button.className = 'button';
-            button.onclick = () => buyUpgrade(index);
-            upgradesContainer.appendChild(button);
-        });
-    }
+    // Open Shop
+    document.getElementById('shopButton').onclick = () => {
+        const shopBox = document.getElementById('shopBox');
+        shopBox.style.display = shopBox.style.display === 'none' ? 'block' : 'none';
+        document.getElementById('commandList').style.display = 'none'; // Close command list if open
+        document.getElementById('commandInput').style.display = 'none'; // Hide command input if open
+    };
 
-    function buyUpgrade(index) {
-        const upgrade = upgrades[index];
-        if (cookieCount >= upgrade.cost) {
-            cookieCount -= upgrade.cost;
-            cookieButton.onclick = () => {
-                cookieCount += upgrade.increase; 
-                stats.clicks++; // Count the clicks
-                updateCookieDisplay();
-            };
+    document.getElementById('closeShopButton').onclick = () => {
+        document.getElementById('shopBox').style.display = 'none'; // Close shop
+    };
+
+    function purchaseItem(itemName, itemCost) {
+        if (cookieCount >= itemCost) {
+            cookieCount -= itemCost;
+            alert(`${itemName} purchased!`);
             updateCookieDisplay();
-            alert(`${upgrade.name} purchased!`);
-            // Remove upgrade from display
-            const buttons = document.querySelectorAll('.upgrade button');
-            buttons[index].style.display = 'none';
         } else {
             alert("Not enough cookies!");
         }
     }
 
-    document.getElementById('cookieButton').onclick = () => {
-        cookieCount += 1;
-        stats.clicks++; // Count the clicks
-        updateCookieDisplay();
-    };
-
-    // Toggle command list visibility
+    // Command List and Execution
     document.getElementById('adminButton').onclick = () => {
         const commandList = document.getElementById('commandList');
+        const commandInput = document.getElementById('commandInput');
         commandList.style.display = commandList.style.display === 'none' ? 'block' : 'none';
-        document.getElementById('commandInput').style.display = commandList.style.display === 'none' ? 'none' : 'block';
+        commandInput.style.display = (commandList.style.display === 'none') ? 'none' : 'block';
     };
 
     document.getElementById('closeCommandList').onclick = () => {
@@ -201,6 +216,10 @@
             const freeUser = parts[1];
             bannedUsers.delete(freeUser);
             alert(`${freeUser} has been set free.`);
+        } else if (cmd === '/unban' && parts[1]) {
+            const unbanUser = parts[1];
+            bannedUsers.delete(unbanUser);
+            alert(`${unbanUser} has been unbanned.`);
         } else if (cmd === '/give-admin' && parts[1]) {
             const newAdmin = parts[1];
             if (newAdmin === owner) {
@@ -236,7 +255,6 @@
     // Initialize the game on load
     window.onload = () => {
         updateCookieDisplay();
-        initializeUpgrades();
     };
 </script>
 
