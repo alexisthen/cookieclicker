@@ -49,10 +49,10 @@
 
 <h1>Cookie Clicker</h1>
 <div id="emailBox" style="position: absolute; top: 0; left: 0;">
-    <button id="emailButton" style="background-color: transparent; border: none; cursor: pointer;">+</button>
+    <button id="emailButton" style="background-color: transparent; border: none; cursor: pointer;">📧</button>
     <div id="emailBoxContent" style="display: none; background-color: rgba(0, 0, 255, 0.7); padding: 15px; border-radius: 5px; width: fit-content;">
-        <strong>Github Name:</strong> <span id="githubName"></span><br />
-        <p id="emailMessage"></p>
+        <strong>Github Name:</strong> <span id="githubName">your_github_username</span><br />
+        <p id="emailMessage">No new messages.</p>
     </div>
 </div>
 
@@ -90,7 +90,6 @@
 </div>
 
 <script>
-
     let cookieCount = 0;
 
     function updateCookieDisplay() {
@@ -105,13 +104,6 @@
     document.getElementById('emailButton').onclick = () => {
         const emailBox = document.getElementById('emailBoxContent');
         emailBox.style.display = emailBox.style.display === 'none' ? 'block' : 'none';
-    };
-
-    document.getElementById('emailBoxContent').onclick = (e) => {
-        if (e.target.id === 'emailBoxContent') {
-            const emailBox = document.getElementById('emailBoxContent');
-            emailBox.style.display = 'none';
-        }
     };
 
     document.getElementById('shopButton').onclick = () => {
@@ -143,7 +135,9 @@
     }
 
     function executeCommand(command) {
-        // Your code here
+        // Your code here for command execution
+        // Example: Add a message to the email box when a command is executed
+        document.getElementById('emailMessage').innerText = `Executed command: ${command}`;
     }
 
     window.onload = () => {
