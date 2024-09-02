@@ -29,7 +29,7 @@
             border-radius: 5px;
         }
 
-        #shopBox, #commandList {
+        #shopBox, #commandList, #emailBox {
             display: none;
             background-color: rgba(0, 0, 255, 0.7);
             color: white;
@@ -48,6 +48,14 @@
 <body>
 
 <h1>Cookie Clicker</h1>
+<div id="emailBox" style="position: absolute; top: 0; left: 0;">
+    <button id="emailButton" style="background-color: transparent; border: none; cursor: pointer;">+</button>
+    <div id="emailBoxContent" style="display: none; background-color: rgba(0, 0, 255, 0.7); padding: 15px; border-radius: 5px; width: fit-content;">
+        <strong>Github Name:</strong> <span id="githubName"></span><br />
+        <p id="emailMessage"></p>
+    </div>
+</div>
+
 <div id="cookieCount">Cookies: 0</div>
 <button id="cookieButton" class="button">Click Me!</button>
 
@@ -65,110 +73,79 @@
     <div id="commandList">
         <strong>Available Commands:</strong>
         <ul>
-            <li onclick="populateCommandInput('/ban username email duration reason')">/ban {username} {email} {time} {reason}</li>
-            <li onclick="populateCommandInput('/set-email username email')">/set-email {username} {email}</li>
+            <li onclick="populateCommandInput('/ban {github-name} {time} {reason}')">/ban {github-name} {time} {reason}</li>
+            <li onclick="populateCommandInput('/set-free {github-name}')">/set-free {github-name}</li>
+            <li onclick="populateCommandInput('/unban {github-name}')">/unban {github-name}</li>
+            <li onclick="populateCommandInput('/give-admin {github-name}')">/give-admin {github-name}</li>
+            <li onclick="populateCommandInput('/revoke-admin {github-name}')">/revoke-admin {github-name}</li>
+            <li onclick="populateCommandInput('/view-players')">/view-players</li>
+            <li onclick="populateCommandInput('/stat-resetter')">/stat-resetter</li>
+            <li onclick="populateCommandInput('/stat {stat} {value}')">/stat {stat} {value}</li>
         </ul>
         <button id="closeCommandList" class="button">Close</button>
     </div>
-    
+
     <input id="commandInput" type="text" placeholder="Enter command..." />
     <button id="executeCommand" class="button">Execute</button>
 </div>
 
 <script>
+
     let cookieCount = 0;
-    let bannedUsers = {};
-    let userEmails = {};
-    let admins = new Set(["alexisthen"]); // Example admin
-    const owner = "alexisthen";
 
-    // Check if the user is admin
-    function isAdmin(user) {
-        return admins.has(user) || user === owner;
-    }
-
-    // Update the displayed cookie count
     function updateCookieDisplay() {
         document.getElementById('cookieCount').innerText = `Cookies: ${cookieCount}`;
     }
 
-    // Click event for the Cookie Button
     document.getElementById('cookieButton').onclick = () => {
         cookieCount++;
         updateCookieDisplay();
     };
 
-    // Open the Shop
+    document.getElementById('emailButton').onclick = () => {
+        const emailBox = document.getElementById('emailBoxContent');
+        emailBox.style.display = emailBox.style.display === 'none' ? 'block' : 'none';
+    };
+
+    document.getElementById('emailBoxContent').onclick = (e) => {
+        if (e.target.id === 'emailBoxContent') {
+            const emailBox = document.getElementById('emailBoxContent');
+            emailBox.style.display = 'none';
+        }
+    };
+
     document.getElementById('shopButton').onclick = () => {
         const shopBox = document.getElementById('shopBox');
         shopBox.style.display = shopBox.style.display === 'none' ? 'block' : 'none';
     };
 
-    // Close the Shop
     document.getElementById('closeShopButton').onclick = () => {
         document.getElementById('shopBox').style.display = 'none';
     };
 
-    // Admin button opens the command list
     document.getElementById('adminButton').onclick = () => {
         const commandList = document.getElementById('commandList');
         commandList.style.display = commandList.style.display === 'none' ? 'block' : 'none';
     };
 
-    // Close the command list
     document.getElementById('closeCommandList').onclick = () => {
         document.getElementById('commandList').style.display = 'none';
     };
 
-    // Execute command from command input
     document.getElementById('executeCommand').onclick = () => {
         const commandInput = document.getElementById('commandInput').value;
-        executeCommand(commandInput, owner);
+        executeCommand(commandInput);
         document.getElementById('commandInput').value = ''; // Clear input
     };
 
-    // Populate command input for ease of use
     function populateCommandInput(command) {
         document.getElementById('commandInput').value = command;
     }
 
-    // Execute command logic
-    function executeCommand(command, user) {
-        const parts = command.split(' ');
-        const cmd = parts[0];
-
-        // Check admin permissions
-        if (!isAdmin(user)) {
-            alert('You do not have permission to execute this command.');
-            return;
-        }
-
-        if (cmd === '/ban' && parts[1] && parts[2] && parts[3]) {
-            const banUser = parts[1];
-            const email = parts[2];
-            const time = parts[3]; // Duration in minutes
-            const reason = parts.slice(4).join(' ');
-
-            bannedUsers[banUser] = { email: email, reason: reason, expiresAt: Date.now() + parseInt(time) * 60000 };
-            alert(`${banUser} has been banned for ${time} minutes. Reason: ${reason}`);
-
-            // Mock sending an email
-            sendBanEmail(email, reason, time);
-        } else if (cmd === '/set-email' && parts[1] && parts[2]) {
-            // Set user email
-            bannedUsers[parts[1]] = { ...bannedUsers[parts[1]], email: parts[2] };
-            alert(`Email for ${parts[1]} has been set to ${parts[2]}.`);
-        } else {
-            alert('Invalid command or parameters.');
-        }
+    function executeCommand(command) {
+        // Your code here
     }
 
-    // Simulate sending a ban email (placeholder)
-    function sendBanEmail(email, reason, time) {
-        alert(`Mock Email sent to ${email}: You are banned for "${reason}". Duration: ${time} minutes.`);
-    }
-
-    // Initialize the game on load
     window.onload = () => {
         updateCookieDisplay();
     };
