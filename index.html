@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cookie Clicker Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f3f4f6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        h1 {
+            background: linear-gradient(90deg, red, blue);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 3em;
+            margin: 0;
+        }
+
+        #cookie {
+            width: 200px;
+            cursor: pointer;
+        }
+
+        #cookieCount, #multiplier {
+            font-size: 1.5em;
+            margin: 10px;
+        }
+
+        #shop {
+            display: none;
+            background: white;
+            border: 2px solid #666;
+            border-radius: 10px;
+            padding: 20px;
+            position: absolute;
+            top: 50px;
+            right: 20px;
+        }
+
+        #shop button {
+            margin: 5px;
+        }
+
+        #shopButton {
+            cursor: pointer;
+        }
+
+        button {
+            padding: 10px;
+            font-size: 1em;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Cookie Clicker</h1>
+    <div id="cookieCount">Cookies: 0</div>
+    <div id="multiplier">CPC: 1</div>
+    <img id="cookie" src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Chocolate_chip_cookie.jpg/200px-Chocolate_chip_cookie.jpg" alt="Cookie">
+    
+    <button id="shopButton">Shop</button>
+    <div id="shop">
+        <h2>Shop</h2>
+        <button id="buyMultiplier">Buy +1 Multiplier (100 Cookies)</button>
+        <button id="buyCPC">Buy +1 CPC (1000 Cookies)</button>
+    </div>
+
+    <script>
+        let cookies = 0;
+        let multiplier = 1; // starting multiplier
+        let cpc = 1; // cookies per click
+        const cookieElement = document.getElementById('cookie');
+        const cookieCountElement = document.getElementById('cookieCount');
+        const multiplierElement = document.getElementById('multiplier');
+        const shopElement = document.getElementById('shop');
+
+        cookieElement.addEventListener('click', () => {
+            cookies += cpc * multiplier;
+            updateDisplay();
+        });
+
+        document.getElementById('shopButton').addEventListener('click', () => {
+            shopElement.style.display = shopElement.style.display === 'none' ? 'block' : 'none';
+        });
+
+        document.getElementById('buyMultiplier').addEventListener('click', () => {
+            if (cookies >= 100) {
+                multiplier += 1;
+                cookies -= 100;
+                updateDisplay();
+            } else {
+                alert('Not enough cookies!');
+            }
+        });
+
+        document.getElementById('buyCPC').addEventListener('click', () => {
+            if (cookies >= 1000) {
+                cpc += 1;
+                cookies -= 1000;
+                updateDisplay();
+            } else {
+                alert('Not enough cookies!');
+            }
+        });
+
+        function updateDisplay() {
+            cookieCountElement.innerText = `Cookies: ${cookies}`;
+            multiplierElement.innerText = `CPC: ${cpc * multiplier}`;
+        }
+    </script>
+</body>
+</html>
