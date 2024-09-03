@@ -47,7 +47,7 @@
             right: 0;
             background-color: rgba(0, 0, 255, 0.7);
             padding: 10px;
-            display: none; /* Initially hidden */
+            display: none;
         }
 
         #cartItems {
@@ -75,7 +75,7 @@
             top: 20px;
             left: 20px;
             z-index: 1000;
-            width: 250px; /* Fixed width for consistent email box size */
+            width: 250px;
         }
 
         #bannedOverlay {
@@ -85,7 +85,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(255, 0, 0, 0.8); /* Red overlay */
+            background-color: rgba(255, 0, 0, 0.8);
             color: white;
             text-align: center;
             padding-top: 20%;
@@ -98,7 +98,7 @@
         }
 
         #emailButton {
-            font-size: 20px; /* Larger email button */
+            font-size: 20px;
         }
     </style>
 </head>
@@ -136,23 +136,23 @@
     <div id="commandList" style="display: none;">
         <strong>Available Commands:</strong>
         <ul>
-            <li><button class="button" onclick="executeCommand('/view-players')">/view-players</button></li>
-            <li><button class="button" onclick="executeCommand('/test-ban')">/test-ban</button></li>
-            <li><button class="button" onclick="executeCommand('/unban <username>')">/unban &lt;username&gt;</button></li>
-            <li><button class="button" onclick="executeCommand('/ban <username> <reason>')">/ban &lt;username&gt; &lt;reason&gt;</button></li>
-            <li><button class="button" onclick="executeCommand('/list-banned')">/list-banned</button></li>
-            <li><button class="button" onclick="executeCommand('/give-cookies <username> <amount>')">/give-cookies &lt;username&gt; &lt;amount&gt;</button></li>
-            <li><button class="button" onclick="executeCommand('/set-cookies <username> <amount>')">/set-cookies &lt;username&gt; &lt;amount&gt;</button></li>
-            <li><button class="button" onclick="executeCommand('/add-item <item>')">/add-item &lt;item&gt;</button></li>
-            <li><button class="button" onclick="executeCommand('/remove-item <item>')">/remove-item &lt;item&gt;</button></li>
-            <li><button class="button" onclick="executeCommand('/shutdown')">/shutdown</button></li>
-            <li><button class="button" onclick="executeCommand('/message <username> <message>')">/message &lt;username&gt; &lt;message&gt;</button></li>
+            <li><button class="button" onclick="addCommandToInput('/view-players')">/view-players</button></li>
+            <li><button class="button" onclick="addCommandToInput('/test-ban')">/test-ban</button></li>
+            <li><button class="button" onclick="addCommandToInput('/unban <username>')">/unban &lt;username&gt;</button></li>
+            <li><button class="button" onclick="addCommandToInput('/ban <username> <reason>')">/ban &lt;username&gt; &lt;reason&gt;</button></li>
+            <li><button class="button" onclick="addCommandToInput('/list-banned')">/list-banned</button></li>
+            <li><button class="button" onclick="addCommandToInput('/give-cookies <username> <amount>')">/give-cookies &lt;username&gt; &lt;amount&gt;</button></li>
+            <li><button class="button" onclick="addCommandToInput('/set-cookies <username> <amount>')">/set-cookies &lt;username&gt; &lt;amount&gt;</button></li>
+            <li><button class="button" onclick="addCommandToInput('/add-item <item>')">/add-item &lt;item&gt;</button></li>
+            <li><button class="button" onclick="addCommandToInput('/remove-item <item>')">/remove-item &lt;item&gt;</button></li>
+            <li><button class="button" onclick="addCommandToInput('/shutdown')">/shutdown</button></li>
+            <li><button class="button" onclick="addCommandToInput('/message <username> <message>')">/message &lt;username&gt; &lt;message&gt;</button></li>
         </ul>
         <button id="closeCommandList" class="button">Close</button>
     </div>
 
     <input id="commandInput" type="text" placeholder="Enter command..." />
-    <button id="executeCommand" class="button" onclick="executeCommandPrompt()">Execute</button>
+    <button id="executeCommand" class="button" onclick="executeCommand()">Execute</button>
 </div>
 
 <div id="cartBox">
@@ -167,7 +167,7 @@
     let cart = {};
     let isBanned = false;
     let isAdmin = false;
-    let bannedUsers = []; // Array to hold banned users
+    let bannedUsers = {}; // Store banned users as an object for persistence
     let players = []; // Array to hold current players
 
     // Get GitHub username automatically
@@ -218,26 +218,17 @@
         document.getElementById('commandList').style.display = 'none';
     };
 
-    function executeCommandPrompt() {
-        // Prompt for the password to execute commands if user is not already an admin
-        if (!isAdmin) {
-            const password = prompt("Enter admin password:");
-            if (password === "1212127") {
-                isAdmin = true; // Grant admin rights if password is correct
-                document.getElementById('adminButton').style.display = 'block'; // Show admin button
-                alert("Admin access granted!");
-            } else {
-                alert("Incorrect password!"); // Alert if password is incorrect
-                return; // Stop further execution if password fails
-            }
-        } 
+    function addCommandToInput(command) {
+        const commandInput = document.getElementById('commandInput');
+        commandInput.value += command + ' '; // Append command to the input field
     }
 
-    function executeCommand(command) {
+    function executeCommand() {
         if (!isAdmin) {
             return showAlert("You do not have permission to use this command.");
         }
 
+        const command = document.getElementById('commandInput').value;
         const args = command.split(" ").slice(1); // Get arguments after the command
         const commandBase = command.split(" ")[0];
 
@@ -254,7 +245,8 @@
                 }
                 break;
             case "/list-banned":
-                showAlert(`Banned Users:\n${bannedUsers.join('\n') || 'None'}`);
+                const bannedList = Object.keys(bannedUsers).length > 0 ? Object.keys(bannedUsers).join('\n') : 'None';
+                showAlert(`Banned Users:\n${bannedList}`);
                 break;
             case "/unban":
                 if(args.length < 1) {
@@ -262,7 +254,7 @@
                     return;
                 }
                 const unbanUsername = args[0];
-                bannedUsers = bannedUsers.filter(user => user !== unbanUsername);
+                delete bannedUsers[unbanUsername]; // Remove user from banned list
                 showAlert(`${unbanUsername} has been unbanned.`);
                 break;
             case "/ban":
@@ -272,7 +264,7 @@
                 }
                 const banUsername = args[0];
                 const reason = args.slice(1).join(" "); // Join rest of the args as reason
-                bannedUsers.push(banUsername);
+                bannedUsers[banUsername] = reason;  // Permanently ban the user
                 showAlert(`${banUsername} has been banned for: ${reason}`);
                 break;
             case "/give-cookies":
@@ -282,7 +274,7 @@
                 }
                 const giveUsername = args[0];
                 const amount = parseInt(args[1]);
-                // Logic to give cookies to the user
+                // Logic to give cookies to the user (not implemented in this demo)
                 showAlert(`Gave ${amount} cookies to ${giveUsername}.`); // Placeholder
                 break;
             case "/set-cookies":
@@ -292,7 +284,7 @@
                 }
                 const setUsername = args[0];
                 const setAmount = parseInt(args[1]);
-                // Logic to set user's cookies
+                // Logic to set user's cookies (not implemented in this demo)
                 showAlert(`Set ${setUsername}'s cookies to ${setAmount}.`); // Placeholder
                 break;
             case "/add-item":
@@ -301,7 +293,7 @@
                     return;
                 }
                 const newItem = args[0];
-                // Logic to add new item to shop
+                // Logic to add new item to shop (not implemented in this demo)
                 showAlert(`Added ${newItem} to the shop.`); // Placeholder
                 break;
             case "/remove-item":
@@ -310,7 +302,7 @@
                     return;
                 }
                 const removeItem = args[0];
-                // Logic to remove item from shop
+                // Logic to remove item from shop (not implemented in this demo)
                 showAlert(`Removed ${removeItem} from the shop.`); // Placeholder
                 break;
             case "/shutdown":
@@ -328,6 +320,7 @@
             default:
                 showAlert(`Unknown command: ${command}`);
         }
+        document.getElementById('commandInput').value = ""; // Clear the input after executing
     }
 
     function showAlert(message) {
@@ -335,8 +328,8 @@
     }
 
     function banUser(username, reason) {
-        if (!bannedUsers.includes(username)) {
-            bannedUsers.push(username); // Add user to banned list
+        if (!(username in bannedUsers)) {
+            bannedUsers[username] = reason; // Add user to banned list
         }
 
         isBanned = true;
@@ -368,7 +361,7 @@
             cartItemsList.appendChild(listItem);
         }
 
-        const totalCookies = Object.keys(cart).reduce((total, item) => total + cart[item] * 50, 0); // Assuming each item costs 50 cookies
+        const totalCookies = Object.keys(cart).reduce((total, item) => total + cart[item] * 50, 0); 
         document.getElementById('cartTotal').innerText = `Total: ${totalCookies} Cookies`;
 
         document.getElementById('checkoutButton').disabled = cookieCount < totalCookies;
@@ -402,8 +395,8 @@
     };
 
     if (isBanned) {
-        document.getElementById('banReason').innerText = "No valid username provided."; // Show reason if banned
-        document.getElementById('bannedOverlay').style.display = 'block'; // Show banned overlay
+        document.getElementById('banReason').innerText = "No valid username provided."; 
+        document.getElementById('bannedOverlay').style.display = 'block'; 
     }
 
     window.onload = () => {
