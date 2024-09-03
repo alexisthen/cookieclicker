@@ -172,6 +172,20 @@
 
     // Get GitHub username automatically
     const githubUsername = prompt("Enter your GitHub username:");
+
+    // Check if the username is "alexisthen"
+    if (githubUsername === "alexisthen") {
+        const adminPassword = prompt("Enter admin password:");
+        if (adminPassword !== "1212127") {
+            alert("Incorrect password! Access denied.");
+            isBanned = true; // Deny access by banning the user
+            document.getElementById('banReason').innerText = "Unauthorized access attempt.";
+        } else {
+            isAdmin = true; // Grant admin permissions if password is correct
+            alert("Admin access granted!");
+        }
+    }
+
     if (!githubUsername || githubUsername.trim() === "") {
         isBanned = true; // User is considered banned if no username is provided
         document.getElementById('banReason').innerText = "Possible Ban Evasion";
