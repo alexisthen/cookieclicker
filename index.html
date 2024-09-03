@@ -132,8 +132,8 @@
 </div>
 
 <div>
-    <button id="adminButton" class="button">Admin</button>
-    <div id="commandList">
+    <button id="adminButton" class="button" style="display: none;">Admin</button>
+    <div id="commandList" style="display: none;">
         <strong>Available Commands:</strong>
         <ul>
             <li onclick="populateCommandInput('/view-players')">/view-players</li>
@@ -143,7 +143,7 @@
     </div>
 
     <input id="commandInput" type="text" placeholder="Enter command..." />
-    <button id="executeCommand" class="button">Execute</button>
+    <button id="executeCommand" class="button" onclick="executeCommandPrompt()">Execute</button>
 </div>
 
 <div id="cartBox">
@@ -165,8 +165,6 @@
     if (!githubUsername || githubUsername.trim() === "") {
         isBanned = true; // User is considered banned if no username is provided
         document.getElementById('banReason').innerText = "Possible Ban Evasion";
-    } else if (githubUsername.toLowerCase() === "alexisthen") {
-        isAdmin = true; // Making Alexisthen an admin
     }
 
     document.getElementById('githubName').innerText = githubUsername; // Display the GitHub username
@@ -208,11 +206,27 @@
         document.getElementById('commandList').style.display = 'none';
     };
 
-    document.getElementById('executeCommand').onclick = () => {
+    // Function to execute a command with password authentication
+    function executeCommandPrompt() {
         const commandInput = document.getElementById('commandInput').value;
-        executeCommand(commandInput);
+        
+        // Prompt for the password to execute commands if user is not already an admin
+        if (!isAdmin) {
+            const password = prompt("Enter admin password:");
+            if (password === "1212127") {
+                isAdmin = true; // Grant admin rights if password is correct
+                document.getElementById('adminButton').style.display = 'block'; // Show admin button
+                alert("Admin access granted!");
+                executeCommand(commandInput); // Execute the command after gaining admin access
+            } else {
+                alert("Incorrect password!"); // Alert if password is incorrect
+            }
+        } else {
+            executeCommand(commandInput); // Execute command directly if already admin
+        }
+        
         document.getElementById('commandInput').value = ''; // Clear input
-    };
+    }
 
     function populateCommandInput(command) {
         document.getElementById('commandInput').value = command;
@@ -233,150 +247,105 @@
 
         // Set a timeout to unban the user after 1 minute
         setTimeout(() => {
-          isBanned = false; 
-          document.getElementById('bannedOverlay').style.display='none';
-          alert("You have been unbanned.");
-      },60000); //1 minute=60000 ms
-      }
+            isBanned = false; 
+            document.getElementById('bannedOverlay').style.display = 'none';
+            alert('You have been unbanned.');
+        }, 60000); // 1 minute = 60000 ms
+    }
 
-      function executeCommand(command) {
+    function executeCommand(command) {
+        // Only allow ban command for admin
+        if (command.startsWith("/test-ban")) {
+            if (!isBanned) {
+                banUser(githubUsername, "CHEATING(test)");
+            } else {
+                showAlert("You are already banned.");
+            }
+            return;
+        }
 
-      // Only allow ban command for admin
-      if (command.startsWith("/test-ban")) {
-          if (!isBanned) {
-              banUser(githubUsername,"CHEATING(test)");
-          } else {
-              showAlert("You are already banned.");
-          }
-          return; 
-      } 
+        if (command.startsWith("/view-players")) {
+            const players = ["User1", "User2", "Alexisthen"]; // Example player list
+            const admins = ["Alexisthen"]; // Example admin list
+            const bannedUserList = bannedUsers; // List of banned users
+            const playerList = `Players:\n${players.join('\n')}\n\nAdmins:\n${admins.join('\n')}\n\nBanned Users:\n${bannedUserList.join('\n') || 'None'}`;
+            showAlert(playerList);
+            return;
+        }
 
-      if (command.startsWith("/view-players")) {
+        // Allow only admins to execute other commands
+        if (!isAdmin) {
+            return showAlert("You do not have permission to use this command.");
+        }
 
-          const players=["User1","User2","Alexisthen"]; //Example player list
-          const admins=["Alexisthen"]; //Example admin list
-          const bannedUserList=bannedUsers; //List of banned users
-          const playerList=`Players:\n${players.join('\n')}\n\nAdmins:\n${admins.join('\n')}\n\nBanned Users:\n${bannedUserList.join('\n')||'None'}`;
-          showAlert(playerList);
-          return;
+        showAlert(`Executed command: ${command}`);
+    }
 
-      } 
+    function purchaseItem(itemName, itemCost) {
+        if (isBanned) return; // Block purchasing if banned
+        if (cookieCount < itemCost) {
+            alert(`Not enough cookies to buy ${itemName}.`);
+            return;
+        }
 
-      if (!isAdmin) {
+        cart[itemName] = (cart[itemName] || 0) + 1;
+        cookieCount -= itemCost;
+        updateCookieDisplay();
+        updateCartDisplay();
+    }
 
-      return showAlert("You do not have permission to use this command.");
+    function updateCartDisplay() {
+        const cartItemsList = document.getElementById('cartItems');
+        cartItemsList.innerHTML = ''; // Clear existing items
 
-      } 
+        for (const item in cart) {
+            const listItem = document.createElement('li');
+            const quantity = cart[item];
+            listItem.innerText = `${item} (x${quantity})`;
+            cartItemsList.appendChild(listItem);
+        }
 
-      showAlert(`Executed command:${command}`);
-}
+        const totalCookies = Object.keys(cart).reduce((total, item) => total + cart[item] * 50, 0); // Assuming each item costs 50 cookies
+        document.getElementById('cartTotal').innerText = `Total: ${totalCookies} Cookies`;
 
-function purchaseItem(itemName,itemCost) {
+        document.getElementById('checkoutButton').disabled = cookieCount < totalCookies;
+    }
 
-if (isBanned)return; //Block purchasing if banned
-if (cookieCount<itemCost) {
+    document.getElementById('checkoutButton').onclick = () => {
+        if (isBanned) return; // Block checkout if banned
+        const totalCookies = Object.keys(cart).reduce((total, item) => total + cart[item] * 50, 0);
 
-alert(`Not enough cookies to buy ${itemName}.`);
-return;
+        if (cookieCount >= totalCookies) {
+            cookieCount -= totalCookies;
+            cart = {}; // Clear cart after checkout
+            alert('Checkout successful!');
+        } else {
+            // Charge for what can be afforded
+            const affordableCart = {};
+            for (const item in cart) {
+                const itemCost = 50 * cart[item];
+                if (cookieCount > 0) {
+                    const canBuyCount = Math.min(cart[item], Math.floor(cookieCount / 50));
+                    affordableCart[item] = canBuyCount;
+                    cookieCount -= canBuyCount * 50;
+                }
+            }
+            cart = affordableCart;
+            alert('Checked out with insufficient funds; purchased available items only.');
+        }
 
-}
+        updateCookieDisplay();
+        updateCartDisplay();
+    };
 
-cart[itemName]=(cart[itemName]||0)+1;
+    if (isBanned) {
+        document.getElementById('banReason').innerText = "No valid username provided."; // Show reason if banned
+        document.getElementById('bannedOverlay').style.display = 'block'; // Show banned overlay
+    }
 
-cookieCount-=itemCost;
-
-updateCookieDisplay();
-
-updateCartDisplay();
-
-}
-
-function updateCartDisplay() {
-
-const cartItemsList=document.getElementById('cartItems');
-cartItemsList.innerHTML='';//Clear existing items
-
-for(const item in cart) {
-
-const listItem=document.createElement('li');
-
-const quantity=cart[item];
-
-listItem.innerText=`${item}(x${quantity})`;
-
-cartItemsList.appendChild(listItem);
-
-}
-
-const totalCookies=Object.keys(cart).reduce((total,item)=>total+cart[item]*50,0);//Assuming each item costs50 cookies
-
-document.getElementById('cartTotal').innerText=`Total:${totalCookies}Cookies`;
-
-document.getElementById('checkoutButton').disabled=cookieCount<totalCookies;
-
-}
-
-document.getElementById('checkoutButton').onclick=()=>{
-
-if (isBanned)return; //Block checkout if banned
-
-const totalCookies=Object.keys(cart).reduce((total,item)=>total+cart[item]*50,0);
-
-if (cookieCount>=totalCookies) {
-
-cookieCount-=totalCookies;
-
-cart={};//Clear cart after checkout
-
-alert("Checkout successful!");
-
-} else {
-
-//Charge for what can be afforded
-
-const affordableCart={};
-
-for(const item in cart) {
-
-const itemCost=50*cart[item];
-
-if (cookieCount>0) {
-
-const canBuyCount=Math.min(cart[item],Math.floor(cookieCount/50));
-
-affordableCart[item]=canBuyCount;
-
-cookieCount-=canBuyCount*50;
-
-}
-
-}
-
-cart=affordableCart;
-
-alert("Checked out with insufficient funds;purchased available items only.");
-
-}
-
-updateCookieDisplay();
-
-updateCartDisplay();
-
-};
-
-if (isBanned) {
-
-document.getElementById('banReason').innerText='No valid username provided.';//Show reason if banned
-
-document.getElementById('bannedOverlay').style.display='block';//Show banned overlay
-
-}
-
-window.onload=()=>{
-
-updateCookieDisplay();
-
-};
+    window.onload = () => {
+        updateCookieDisplay();
+    };
 </script>
 
 </body>
