@@ -136,8 +136,16 @@
     <div id="commandList" style="display: none;">
         <strong>Available Commands:</strong>
         <ul>
-            <li onclick="populateCommandInput('/view-players')">/view-players</li>
-            <li onclick="populateCommandInput('/test-ban')">/test-ban</li>
+            <li><button class="button" onclick="executeCommand('/view-players')">/view-players</button></li>
+            <li><button class="button" onclick="executeCommand('/test-ban')">/test-ban</button></li>
+            <li><button class="button" onclick="executeCommand('/unban <username>')">/unban &lt;username&gt;</button></li>
+            <li><button class="button" onclick="executeCommand('/ban <username> <reason>')">/ban &lt;username&gt; &lt;reason&gt;</button></li>
+            <li><button class="button" onclick="executeCommand('/list-banned')">/list-banned</button></li>
+            <li><button class="button" onclick="executeCommand('/give-cookies <username> <amount>')">/give-cookies &lt;username&gt; &lt;amount&gt;</button></li>
+            <li><button class="button" onclick="executeCommand('/set-cookies <username> <amount>')">/set-cookies &lt;username&gt; &lt;amount&gt;</button></li>
+            <li><button class="button" onclick="executeCommand('/add-item <item>')">/add-item &lt;item&gt;</button></li>
+            <li><button class="button" onclick="executeCommand('/remove-item <item>')">/remove-item &lt;item&gt;</button></li>
+            <li><button class="button" onclick="executeCommand('/shutdown')">/shutdown</button></li>
         </ul>
         <button id="closeCommandList" class="button">Close</button>
     </div>
@@ -206,10 +214,7 @@
         document.getElementById('commandList').style.display = 'none';
     };
 
-    // Function to execute a command with password authentication
     function executeCommandPrompt() {
-        const commandInput = document.getElementById('commandInput').value;
-        
         // Prompt for the password to execute commands if user is not already an admin
         if (!isAdmin) {
             const password = prompt("Enter admin password:");
@@ -217,19 +222,91 @@
                 isAdmin = true; // Grant admin rights if password is correct
                 document.getElementById('adminButton').style.display = 'block'; // Show admin button
                 alert("Admin access granted!");
-                executeCommand(commandInput); // Execute the command after gaining admin access
+                document.getElementById('executeCommand').style.display = 'inline-block'; // Show execute button
             } else {
                 alert("Incorrect password!"); // Alert if password is incorrect
+                return; // Stop further execution if password fails
             }
-        } else {
-            executeCommand(commandInput); // Execute command directly if already admin
-        }
-        
-        document.getElementById('commandInput').value = ''; // Clear input
+        } 
     }
 
-    function populateCommandInput(command) {
-        document.getElementById('commandInput').value = command;
+    function executeCommand(command) {
+        if (!isAdmin) {
+            return showAlert("You do not have permission to use this command.");
+        }
+
+        switch (command.split(" ")[0]) {
+            case "/view-players":
+                const players = ["User1", "User2", "Alexisthen"]; // Example player list
+                const admins = ["Alexisthen"]; // Example admin list
+                const bannedUserList = bannedUsers; // List of banned users
+                const playerList = `Players:\n${players.join('\n')}\n\nAdmins:\n${admins.join('\n')}\n\nBanned Users:\n${bannedUserList.join('\n') || 'None'}`;
+                showAlert(playerList);
+                break;
+            case "/test-ban":
+                if (!isBanned) {
+                    banUser(githubUsername, "CHEATING(test)");
+                } else {
+                    showAlert("You are already banned.");
+                }
+                break;
+            case "/list-banned":
+                showAlert(`Banned Users:\n${bannedUsers.join('\n') || 'None'}`);
+                break;
+            // Add handlers for other commands as needed
+            case "/unban":
+                let unbanUser = command.split(" ")[1];
+                bannedUsers = bannedUsers.filter(user => user !== unbanUser);
+                showAlert(`${unbanUser} has been unbanned.`);
+                break;
+            case "/ban":
+                let banDetails = command.split(" ");
+                if (banDetails.length < 3) {
+                    showAlert("Usage: /ban <username> <reason>");
+                } else {
+                    bannedUsers.push(banDetails[1]);
+                    showAlert(`${banDetails[1]} has been banned.`);
+                }
+                break;
+            case "/give-cookies":
+                let giveDetails = command.split(" ");
+                if (giveDetails.length < 3) {
+                    showAlert("Usage: /give-cookies <username> <amount>");
+                } else {
+                    let user = giveDetails[1];
+                    let amount = parseInt(giveDetails[2]);
+                    // Logic to give cookies to the user
+                    showAlert(`Gave ${amount} cookies to ${user}.`); // Placeholder
+                }
+                break;
+            case "/set-cookies":
+                let setDetails = command.split(" ");
+                if (setDetails.length < 3) {
+                    showAlert("Usage: /set-cookies <username> <amount>");
+                } else {
+                    let user = setDetails[1];
+                    let amount = parseInt(setDetails[2]);
+                    // Logic to set user's cookies
+                    showAlert(`Set ${user}'s cookies to ${amount}.`); // Placeholder
+                }
+                break;
+            case "/add-item":
+                let newItem = command.split(" ")[1];
+                // Logic to add new item to shop
+                showAlert(`Added ${newItem} to the shop.`); // Placeholder
+                break;
+            case "/remove-item":
+                let removeItem = command.split(" ")[1];
+                // Logic to remove item from shop
+                showAlert(`Removed ${removeItem} from the shop.`); // Placeholder
+                break;
+            case "/shutdown":
+                showAlert("Shutting down the game..."); // Placeholder
+                // Logic for shutting down
+                break;
+            default:
+                showAlert(`Unknown command: ${command}`);
+        }
     }
 
     function showAlert(message) {
@@ -251,34 +328,6 @@
             document.getElementById('bannedOverlay').style.display = 'none';
             alert('You have been unbanned.');
         }, 60000); // 1 minute = 60000 ms
-    }
-
-    function executeCommand(command) {
-        // Only allow ban command for admin
-        if (command.startsWith("/test-ban")) {
-            if (!isBanned) {
-                banUser(githubUsername, "CHEATING(test)");
-            } else {
-                showAlert("You are already banned.");
-            }
-            return;
-        }
-
-        if (command.startsWith("/view-players")) {
-            const players = ["User1", "User2", "Alexisthen"]; // Example player list
-            const admins = ["Alexisthen"]; // Example admin list
-            const bannedUserList = bannedUsers; // List of banned users
-            const playerList = `Players:\n${players.join('\n')}\n\nAdmins:\n${admins.join('\n')}\n\nBanned Users:\n${bannedUserList.join('\n') || 'None'}`;
-            showAlert(playerList);
-            return;
-        }
-
-        // Allow only admins to execute other commands
-        if (!isAdmin) {
-            return showAlert("You do not have permission to use this command.");
-        }
-
-        showAlert(`Executed command: ${command}`);
     }
 
     function purchaseItem(itemName, itemCost) {
